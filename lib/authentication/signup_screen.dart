@@ -1,10 +1,12 @@
-import 'package:capstone_project_carpool/methods/common_methods.dart';
-import 'package:capstone_project_carpool/pages/home_page.dart';
-import 'package:capstone_project_carpool/widgets/loading_dialog.dart';
+import 'package:capstone_driver_carpool/pages/dashboard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:capstone_project_carpool/authentication/login_screen.dart';
+
+import '../methods/common_methods.dart';
+import '../widgets/loading_dialog.dart';
+import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -103,7 +105,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     usersRef.set(userDataMap);
 
-    Navigator.push(context, MaterialPageRoute(builder: (c) => HomePage()));
+    Navigator.push(context, MaterialPageRoute(builder: (c) => Dashboard()));
 
   }
 
@@ -115,22 +117,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
           padding: const EdgeInsets.all(50),
           child: Column(
             children: [
-              Center(
-                child: Image.asset(
-                  "assets/images/slsulogo.png",
+
+                const SizedBox(
+                  height: 40,
                 ),
-              ),
+
+                const CircleAvatar(
+                  radius: 86,
+                  backgroundImage: AssetImage("assets/images/avatarman.png"),
+                ),
+
+                const SizedBox(
+                  height: 10,
+                ),
+
 
               const SizedBox(height: 32),
 
-              const Center(
-                child: Text(
-                  "CLIENT SIGNUP",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+              GestureDetector(
+                onTap: ()
+                {
+                  
+                },
+                  child: const Text(
+                    "Select Profile",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
               ),
 
               const SizedBox(height: 32),

@@ -99,10 +99,20 @@ class _LoginScreenState extends State<LoginScreen>
           padding: const EdgeInsets.all(50),
           child: Column(
             children: [
+
+              const SizedBox(
+                height: 60,
+              ),
+
               Center(
                 child: Image.asset(
                   "assets/images/car.png",
+                  width: 220,
                 ),
+              ),
+
+              const SizedBox(
+                height: 30,
               ),
 
               const SizedBox(height: 32,),
