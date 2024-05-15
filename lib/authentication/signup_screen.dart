@@ -1,10 +1,15 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:capstone_driver_carpool/pages/dashboard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../methods/common_methods.dart';
@@ -27,16 +32,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController usernameTextEditingController = TextEditingController();
   TextEditingController passwordTextEditingController = TextEditingController();
+  TextEditingController driversLicenseExpiryDateTextEditingController = TextEditingController();
 
   CommonMethods cMethods = CommonMethods();
   XFile? imageFile;
+  XFile? driversLicenseFile;
+  XFile? medCertFile;
+  String urlOfUploadedImage = "";
+  String urlOfDriversLicenseFile = "";
+  String urlOfMedCertFile = "";
 
   checkIfNetworkIsAvailable()
   {
     cMethods.checkConnectivity(context);
 
-    signUpFormValidation();
+    if(imageFile != null && driversLicenseFile != null && medCertFile != null) // Image Validation
+      {
+        signUpFormValidation();
+      } else
+        {
+          cMethods.displaySnackBar("Please choose an image first.", context);
+        }
+
   }
+
+
 
   signUpFormValidation()
   {
@@ -68,13 +88,70 @@ class _SignUpScreenState extends State<SignUpScreen> {
       {
         cMethods.displaySnackBar("Password must be at least 6 or more characters.", context);
       }
+    else if (driversLicenseExpiryDateTextEditingController.text.trim().isEmpty)
+      {
+        cMethods.displaySnackBar("License expiry date cannot be empty", context);
+      }
     else
       {
-        registerNewUser();
+        uploadFilesToStorage();
       }
   }
 
-  registerNewUser() async
+  uploadFilesToStorage() async
+  {
+    await uploadImageToStorage();
+    await uploadDriversLicenseToStorage();
+    await uploadMedCertToStorage();
+
+    registerNewDriver();
+  }
+
+  uploadImageToStorage() async
+  {
+    String imageIDName = DateTime.now().microsecondsSinceEpoch.toString();
+    Reference referenceImage = FirebaseStorage.instance.ref().child("Images").child(imageIDName);
+
+    UploadTask uploadTask = referenceImage.putFile(File(imageFile!.path));
+    TaskSnapshot snapshot = await uploadTask;
+    urlOfUploadedImage = await snapshot.ref.getDownloadURL();
+
+    setState(() {
+      urlOfUploadedImage;
+    });
+  }
+
+  uploadDriversLicenseToStorage() async
+  {
+    String driversLicenseIDName = DateTime.now().microsecondsSinceEpoch.toString();
+    Reference referenceDriversLicense = FirebaseStorage.instance.ref().child("Licenses").child(driversLicenseIDName);
+
+    UploadTask uploadTask = referenceDriversLicense.putFile(File(driversLicenseFile!.path));
+    TaskSnapshot snapshot = await uploadTask;
+    urlOfDriversLicenseFile = await snapshot.ref.getDownloadURL();
+
+    setState(() {
+      urlOfDriversLicenseFile;
+    });
+  }
+
+  uploadMedCertToStorage() async
+  {
+    String medCertIDName = DateTime.now().microsecondsSinceEpoch.toString();
+    Reference referenceMedCert = FirebaseStorage.instance.ref().child("MedicalCertificates").child(medCertIDName);
+
+    UploadTask uploadTask = referenceMedCert.putFile(File(medCertFile!.path));
+    TaskSnapshot snapshot = await uploadTask;
+    urlOfMedCertFile = await snapshot.ref.getDownloadURL();
+
+    setState(() {
+      urlOfMedCertFile;
+    });
+  }
+
+
+
+  registerNewDriver() async
   {
     showDialog(
       context: context,
@@ -97,17 +174,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if(!context.mounted) return;
     Navigator.pop(context);
 
-    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("users").child(userFirebase!.uid);
-    Map userDataMap =
+    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child("drivers").child(userFirebase!.uid);
+
+    Map driverDataMap =
         {
+          "photo": urlOfUploadedImage,
           "name": usernameTextEditingController.text.trim(),
           "email": emailTextEditingController.text.trim(),
           "phone": phoneNumberTextEditingController.text.trim(),
           "id": userFirebase.uid,
           "blockStatus": "no",
+          "licenseFile": urlOfDriversLicenseFile,
+          "medicalCertFile": urlOfMedCertFile,
+          "licenseExpiryDate": driversLicenseExpiryDateTextEditingController.text.trim(),
         };
 
-    usersRef.set(userDataMap);
+    usersRef.set(driverDataMap);
 
     Navigator.push(context, MaterialPageRoute(builder: (c) => Dashboard()));
 
@@ -121,6 +203,47 @@ class _SignUpScreenState extends State<SignUpScreen> {
     {
       setState(() {
         imageFile = pickedFile;
+      });
+    }  
+  }
+
+  chooseDriversLicenseFile() async
+  {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null)
+      {
+        setState(() {
+          driversLicenseFile = pickedFile;
+        });
+      }
+  }
+
+  chooseMedCertFile() async
+  {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null)
+    {
+      setState(() {
+        medCertFile = pickedFile;
+      });
+    }  
+  }
+
+  pickLicenseExpiryDate(BuildContext context) async
+  {
+    DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101),
+    );
+    
+    if (pickedDate != null)
+    {
+      setState(() {
+        driversLicenseExpiryDateTextEditingController.text = "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
       });
     }  
   }
@@ -185,6 +308,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text(
+                    "PERSONAL INFO",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20,),
+
                   // First Name
                   TextField(
                     controller: firstNameTextEditingController,
@@ -227,24 +360,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     keyboardType: TextInputType.text,
                     decoration: const InputDecoration(
                       labelText: "Last Name",
-                      labelStyle: TextStyle(
-                        fontSize: 14,
-                      ),
-                    ),
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 15,
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  // Employee Number
-                  TextField(
-                    controller: employeeNumberTextEditingController,
-                    keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      labelText: "Employee Number",
                       labelStyle: TextStyle(
                         fontSize: 14,
                       ),
@@ -328,7 +443,89 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 80),
+
+                  const Text(
+                    "ACCOUNT INFO",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Employee Number
+                  TextField(
+                    controller: employeeNumberTextEditingController,
+                    keyboardType: TextInputType.text,
+                    decoration: const InputDecoration(
+                      labelText: "Employee Number",
+                      labelStyle: TextStyle(
+                        fontSize: 14,
+                      ),
+                    ),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 15,
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+
+                  // Upload License
+                  GestureDetector(
+                    onTap: ()
+                    {
+                      chooseDriversLicenseFile();
+                    },
+                    child: const Text(
+                      "Upload Driver's License",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20,),
+
+                  // License Expiry Date
+                  TextField(
+                    controller: driversLicenseExpiryDateTextEditingController,
+                    readOnly: true,
+                    onTap: () => pickLicenseExpiryDate(context),
+                    decoration: const InputDecoration(
+                      labelText: "License Expiry Date",
+                      labelStyle: TextStyle(
+                        fontSize: 14,
+                      ),
+                    ),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 15,
+                    ),
+                  ),
+
+                  const SizedBox(height: 30,),
+
+                  // Uploading Medical Certificate
+                  GestureDetector(
+                    onTap: ()
+                    {
+                      chooseMedCertFile();
+                    },
+                    child: const Text(
+                      "Upload Medical Certificate",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30,),
                 ],
               ),
 
