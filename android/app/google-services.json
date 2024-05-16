@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "490595506829",
+    "firebase_url": "https://capstonecarpool-83955-default-rtdb.firebaseio.com",
+    "project_id": "capstonecarpool-83955",
+    "storage_bucket": "capstonecarpool-83955.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490595506829:android:602f90d41bf4aea6b1e0c4",
+        "android_client_info": {
+          "package_name": "com.placino.capstonedrivercarpool"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtvhZEhfE09tF2muzo5acRv-bjy4kkIA4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490595506829:android:a04fc158f2de0545b1e0c4",
+        "android_client_info": {
+          "package_name": "com.placino.capstoneprojectcarpool"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtvhZEhfE09tF2muzo5acRv-bjy4kkIA4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

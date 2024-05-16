@@ -36,17 +36,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   CommonMethods cMethods = CommonMethods();
   XFile? imageFile;
-  XFile? driversLicenseFile;
+  XFile? driversLicenseFrontFile;
+  XFile? driversLicenseBackFile;
   XFile? medCertFile;
   String urlOfUploadedImage = "";
-  String urlOfDriversLicenseFile = "";
+  String urlOfDriversLicenseFrontFile = "";
+  String urlOfDriversLicenseBackFile = "";
   String urlOfMedCertFile = "";
 
   checkIfNetworkIsAvailable()
   {
     cMethods.checkConnectivity(context);
 
-    if(imageFile != null && driversLicenseFile != null && medCertFile != null) // Image Validation
+    if(imageFile != null && driversLicenseFrontFile != null && medCertFile != null) // Image Validation
       {
         signUpFormValidation();
       } else
@@ -123,16 +125,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   uploadDriversLicenseToStorage() async
   {
-    String driversLicenseIDName = DateTime.now().microsecondsSinceEpoch.toString();
-    Reference referenceDriversLicense = FirebaseStorage.instance.ref().child("Licenses").child(driversLicenseIDName);
+    String driversLicenseIDNameFront = DateTime.now().microsecondsSinceEpoch.toString();
+    Reference referenceDriversLicenseFront = FirebaseStorage.instance.ref().child("Drivers License Front").child(driversLicenseIDNameFront);
 
-    UploadTask uploadTask = referenceDriversLicense.putFile(File(driversLicenseFile!.path));
-    TaskSnapshot snapshot = await uploadTask;
-    urlOfDriversLicenseFile = await snapshot.ref.getDownloadURL();
+    UploadTask uploadTaskFront = referenceDriversLicenseFront.putFile(File(driversLicenseFrontFile!.path));
+    TaskSnapshot snapshotFront = await uploadTaskFront;
+    urlOfDriversLicenseFrontFile = await snapshotFront.ref.getDownloadURL();
 
     setState(() {
-      urlOfDriversLicenseFile;
+      urlOfDriversLicenseFrontFile;
     });
+    
+    String driversLicenseIDNameBack = DateTime.now().microsecondsSinceEpoch.toString();
+    Reference referenceDriversLicenseBack = FirebaseStorage.instance.ref().child("Drivers License Back").child(driversLicenseIDNameBack);
+
+    UploadTask uploadTaskBack = referenceDriversLicenseBack.putFile(File(driversLicenseBackFile!.path));
+    TaskSnapshot snapshotBack = await uploadTaskBack;
+    urlOfDriversLicenseBackFile = await snapshotBack.ref.getDownloadURL();
   }
 
   uploadMedCertToStorage() async
@@ -179,12 +188,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     Map driverDataMap =
         {
           "photo": urlOfUploadedImage,
-          "name": usernameTextEditingController.text.trim(),
-          "email": emailTextEditingController.text.trim(),
+          "firstName": firstNameTextEditingController.text.trim(),
+          "middleName": middleNameTextEditingController.text.trim(),
+          "lastName": lastNameTextEditingController.text.trim(),
           "phone": phoneNumberTextEditingController.text.trim(),
+          "email": emailTextEditingController.text.trim(),
+          "name": usernameTextEditingController.text.trim(),
+
           "id": userFirebase.uid,
           "blockStatus": "no",
-          "licenseFile": urlOfDriversLicenseFile,
+          "employeeNumber": employeeNumberTextEditingController.text.trim(),
+          "licenseFrontFile": urlOfDriversLicenseFrontFile,
+          "licenseBackFile": urlOfDriversLicenseBackFile,
           "medicalCertFile": urlOfMedCertFile,
           "licenseExpiryDate": driversLicenseExpiryDateTextEditingController.text.trim(),
         };
@@ -207,17 +222,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }  
   }
 
-  chooseDriversLicenseFile() async
+  // Method to choose Driver's License Front image
+  chooseDriversLicenseFrontFile() async
   {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null)
       {
         setState(() {
-          driversLicenseFile = pickedFile;
+          driversLicenseFrontFile = pickedFile;
         });
       }
   }
+
+
+  // Method to choose Driver's License Back image
+  chooseDriversLicenseBackFile() async
+  {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null)
+    {
+      setState(() {
+        driversLicenseBackFile = pickedFile;
+      });
+    }  
+  }
+
+
 
   chooseMedCertFile() async
   {
@@ -474,14 +506,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 30),
 
 
-                  // Upload License
+                  // Upload Driver's License Front
                   GestureDetector(
                     onTap: ()
                     {
-                      chooseDriversLicenseFile();
+                      chooseDriversLicenseFrontFile();
                     },
                     child: const Text(
-                      "Upload Driver's License",
+                      "Upload Driver's License Front",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20,),
+
+                  // Upload Driver's License Back
+                  GestureDetector(
+                    onTap: ()
+                    {
+                      chooseDriversLicenseBackFile();
+                    },
+                    child: const Text(
+                      "Upload Driver's License Back",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
