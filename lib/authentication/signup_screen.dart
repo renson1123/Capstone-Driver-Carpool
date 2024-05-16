@@ -112,7 +112,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   uploadImageToStorage() async
   {
     String imageIDName = DateTime.now().microsecondsSinceEpoch.toString();
-    Reference referenceImage = FirebaseStorage.instance.ref().child("Images").child(imageIDName);
+    Reference referenceImage = FirebaseStorage.instance.ref().child("Profile Pic").child(imageIDName);
 
     UploadTask uploadTask = referenceImage.putFile(File(imageFile!.path));
     TaskSnapshot snapshot = await uploadTask;
